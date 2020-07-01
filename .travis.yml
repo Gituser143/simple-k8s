@@ -1,21 +1,20 @@
 sudo: required
 services:
   docker
-
-cache:
-  directories:
-    - "$HOME/google-cloud-sdk/"
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 before_install:
   - openssl aes-256-cbc -K $encrypted_254df65517a8_key -iv $encrypted_254df65517a8_iv -in service-account-new.json.enc -out service-account-new.json -d
-  - gcloud version || true
-  - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
   - source $HOME/google-cloud-sdk/path.bash.inc
-  - gcloud version
+  - gcloud components update kubectl
   - gcloud auth activate-service-account --key-file service-account-new.json
-  - gcloud config set project multi-k8s-281214
-  - gcloud config set compute/zone asia-south1-b
-  - gcloud container clusters get-credentials multi-cluster
+  - gcloud config set project multi-k8s-281214 # Run this,
+  - gcloud config set compute/zone asia-south1-b # this
+  - gcloud container clusters get-credentials multi-cluster # and this on cloud console to setup kubectl
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker build -t bhargavsnv/react-test -f ./client/Dockerfile.dev ./client
 
